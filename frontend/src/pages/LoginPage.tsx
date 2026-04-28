@@ -1,23 +1,44 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Terminal, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Terminal, Mail, Lock, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+
+const DEMO = { email: 'admin@cerberus.io', password: 'cerberus123' };
 
 export function LoginPage() {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const fillDemo = () => {
+    setEmail(DEMO.email);
+    setPassword(DEMO.password);
+    setError('');
+  };
+
+  const copyField = async (val: string, key: string) => {
+    await navigator.clipboard.writeText(val);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 1500);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    // TODO: wire up real auth
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    navigate('/');
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,6 +53,41 @@ export function LoginPage() {
           <p className="text-sm text-neutral-500">
             Sign in to your CERBERUS-AI account
           </p>
+        </div>
+
+        {/* Demo credentials banner */}
+        <div className="bg-[#0d0d0d] border border-[#5c403c]/50 border-l-2 border-l-red-600 p-4 mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="label-caps text-red-500">Demo Credentials</span>
+            <button
+              type="button"
+              onClick={fillDemo}
+              className="font-mono text-[10px] text-red-600 hover:text-red-400 uppercase tracking-widest transition-colors"
+            >
+              Auto-fill →
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {[
+              { label: 'Email', val: DEMO.email, key: 'email' },
+              { label: 'Password', val: DEMO.password, key: 'pass' },
+            ].map(({ label, val, key }) => (
+              <div key={key} className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[10px] text-neutral-600 w-16">{label}</span>
+                <span className="font-mono text-xs text-neutral-300 flex-1">{val}</span>
+                <button
+                  type="button"
+                  onClick={() => copyField(val, key)}
+                  className="text-neutral-600 hover:text-neutral-300 transition-colors"
+                  aria-label={`Copy ${label}`}
+                >
+                  {copied === key
+                    ? <Check className="w-3.5 h-3.5 text-green-400" />
+                    : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Card */}
@@ -95,7 +151,9 @@ export function LoginPage() {
 
             {/* Error */}
             {error && (
-              <p className="text-red-400 text-xs font-mono" role="alert">{error}</p>
+              <p className="text-red-400 text-xs font-mono bg-red-950/40 border border-red-800/50 px-3 py-2" role="alert">
+                {error}
+              </p>
             )}
 
             {/* Submit */}
@@ -137,7 +195,6 @@ export function LoginPage() {
           </div>
         </div>
 
-        {/* Bottom note */}
         <p className="text-center font-mono text-[10px] text-neutral-600 mt-6 uppercase tracking-widest">
           Protected by CERBERUS-AI Security
         </p>
