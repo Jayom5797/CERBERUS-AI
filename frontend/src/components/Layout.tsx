@@ -10,63 +10,84 @@ export function Layout() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative z-10">
       {/* Header */}
-      <header className="border-b border-[#2a2a3a] bg-[#0d0d14] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="relative">
-                <Shield className="w-8 h-8 text-red-600 group-hover:text-red-500 transition-colors" />
-                <div className="absolute inset-0 bg-red-600 opacity-20 blur-md rounded-full group-hover:opacity-30 transition-opacity" />
-              </div>
-              <div>
-                <span className="text-xl font-bold text-white tracking-tight">CERBERUS</span>
-                <span className="text-xl font-bold text-red-600 tracking-tight">-AI</span>
-              </div>
+      <header className="bg-neutral-950/95 backdrop-blur-md border-b border-neutral-900 sticky top-0 z-50">
+        <div className="flex justify-between items-center h-16 px-6 w-full max-w-screen-2xl mx-auto">
+          {/* Logo + Nav */}
+          <div className="flex items-center gap-8">
+            <Link to="/" className="text-xl font-black tracking-tighter text-white uppercase">
+              CERBERUS-AI
             </Link>
-
-            {/* Nav */}
-            <nav className="flex items-center gap-1">
-              {navLinks.map(({ to, label, icon: Icon }) => (
+            <nav className="hidden md:flex items-center gap-6">
+              {navLinks.map(({ to, label }) => (
                 <Link
                   key={to}
                   to={to}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`font-sans uppercase tracking-widest font-bold text-xs transition-all duration-300 ${
                     location.pathname === to
-                      ? 'bg-red-950 text-red-400'
-                      : 'text-[#8888aa] hover:text-[#e8e8f0] hover:bg-[#1a1a24]'
+                      ? 'text-red-500'
+                      : 'text-neutral-400 hover:text-red-500'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
                   {label}
                 </Link>
               ))}
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#8888aa] hover:text-[#e8e8f0] hover:bg-[#1a1a24] transition-colors ml-2"
-              >
-                <Github className="w-4 h-4" />
-              </a>
             </nav>
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+            <Shield className="w-5 h-5 text-neutral-400 hidden sm:block" />
+            <Link
+              to="/login"
+              className={`font-sans uppercase tracking-widest font-bold text-xs transition-all duration-300 px-3 py-1.5 border ${
+                location.pathname === '/login'
+                  ? 'border-red-600 text-red-500'
+                  : 'border-[#5c403c] text-neutral-400 hover:border-red-600 hover:text-white'
+              }`}
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className={`font-sans uppercase tracking-widest font-bold text-xs transition-all duration-300 px-3 py-1.5 ${
+                location.pathname === '/signup'
+                  ? 'bg-red-700 text-white'
+                  : 'bg-red-600 hover:bg-red-500 text-white glow-sm'
+              }`}
+            >
+              Sign Up
+            </Link>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-sans uppercase tracking-widest font-bold text-xs text-neutral-500 hover:text-white transition-all duration-300 hidden md:flex items-center gap-1"
+            >
+              <Github className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         <Outlet />
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#2a2a3a] py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-[#4a4a6a] text-sm">
-            CERBERUS-AI — Autonomous Black-Box AI System Auditor &nbsp;·&nbsp; Built for AI Integrity
-          </p>
+      <footer className="bg-neutral-950 border-t border-neutral-900 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-center py-8 px-6 w-full max-w-screen-2xl mx-auto gap-4">
+          <span className="text-sm font-bold text-neutral-100">CERBERUS-AI</span>
+          <div className="flex items-center gap-6">
+            <a href="#" className="font-mono text-[10px] tracking-tight text-neutral-500 hover:text-white transition-colors">Documentation</a>
+            <a href="#" className="font-mono text-[10px] tracking-tight text-neutral-500 hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="font-mono text-[10px] tracking-tight text-neutral-500 hover:text-white transition-colors">Terms of Service</a>
+          </div>
+          <span className="font-mono text-[10px] tracking-tight text-red-600">
+            CERBERUS-AI — Autonomous Security Intelligence
+          </span>
         </div>
       </footer>
     </div>
