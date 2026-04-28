@@ -16,23 +16,24 @@ export class CrawlerService {
 
   async crawl(): Promise<CrawlResult> {
     try {
-      const response = await axios.post<{ data: CrawlResult }>(
+      const response = await axios.post<{ data: CrawlResult; success: boolean }>(
         `${this.crawlerUrl}/crawl`,
         { scanId: this.scanId, targetUrl: this.targetUrl, options: this.options },
-        { timeout: 120_000 }
+        { timeout: 120_000, validateStatus: () => true }
       );
-      const result = response.data.data;
 
-      // If Playwright found endpoints, use them
-      if (result.endpoints && result.endpoints.length > 0) {
-        return result;
+      // Fall back if: network error, non-200, success=false, or 0 endpoints
+      if (
+        response.status === 200 &&
+        response.data?.success &&
+        response.data?.data?.endpoints?.length > 0
+      ) {
+        return response.data.data;
       }
 
-      // Playwright returned 0 endpoints (pure API target with no frontend)
-      // Fall through to smart HTTP crawler
-      console.warn('[CrawlerService] Playwright returned 0 endpoints — supplementing with HTTP crawler');
+      console.warn('[CrawlerService] Playwright crawler unavailable or returned 0 endpoints — using HTTP crawler');
     } catch {
-      console.warn('[CrawlerService] Playwright crawler unavailable — using smart HTTP crawler');
+      console.warn('[CrawlerService] Playwright crawler network error — using HTTP crawler');
     }
     return this.smartCrawl();
   }
