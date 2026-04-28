@@ -21,11 +21,20 @@ export class CrawlerService {
         { scanId: this.scanId, targetUrl: this.targetUrl, options: this.options },
         { timeout: 120_000 }
       );
-      return response.data.data;
+      const result = response.data.data;
+
+      // If Playwright found endpoints, use them
+      if (result.endpoints && result.endpoints.length > 0) {
+        return result;
+      }
+
+      // Playwright returned 0 endpoints (pure API target with no frontend)
+      // Fall through to smart HTTP crawler
+      console.warn('[CrawlerService] Playwright returned 0 endpoints — supplementing with HTTP crawler');
     } catch {
       console.warn('[CrawlerService] Playwright crawler unavailable — using smart HTTP crawler');
-      return this.smartCrawl();
     }
+    return this.smartCrawl();
   }
 
   /**
@@ -212,21 +221,21 @@ export class CrawlerService {
     const scan = (obj: unknown, depth = 0): void => {
       if (depth > 4 || !obj) return;
       if (typeof obj === 'string') {
-        // Looks like an API path
-        if (/^\/api\//.test(obj) || /^\/v\d\//.test(obj)) {
-          const full = `${baseUrl}${obj}`;
+        let path = obj;
+
+        // Replace :param and {param} style templates with concrete values
+        path = path.replace(/:([a-zA-Z_]+)/g, '1').replace(/\{[a-zA-Z_]+\}/g, '1');
+
+        if (/^\/[a-zA-Z]/.test(path)) {
+          const full = `${baseUrl}${path}`;
           if (!seen.has(full)) { seen.add(full); paths.push(full); }
         }
-        // Full URL on same origin
         if (obj.startsWith(baseUrl) && obj !== baseUrl) {
           if (!seen.has(obj)) { seen.add(obj); paths.push(obj); }
         }
         return;
       }
-      if (Array.isArray(obj)) {
-        obj.forEach((item) => scan(item, depth + 1));
-        return;
-      }
+      if (Array.isArray(obj)) { obj.forEach((item) => scan(item, depth + 1)); return; }
       if (typeof obj === 'object') {
         Object.values(obj as Record<string, unknown>).forEach((v) => scan(v, depth + 1));
       }
