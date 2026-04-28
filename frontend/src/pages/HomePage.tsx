@@ -251,7 +251,7 @@ export function HomePage() {
 
       {/* ── How It Works ── */}
       <section className="py-16">
-        <h2 className="text-2xl font-semibold text-white mb-16 uppercase text-center tracking-tight">
+        <h2 className="text-3xl font-semibold text-white mb-16 uppercase text-center tracking-tight">
           Operational Flow
         </h2>
         <div className="relative flex flex-col md:flex-row justify-between items-start gap-6">
@@ -260,16 +260,16 @@ export function HomePage() {
 
           {steps.map(({ num, title, desc }) => (
             <div key={num} className="relative z-10 flex-1 text-center px-4">
-              <div className="w-12 h-12 bg-neutral-950 border border-red-600 flex items-center justify-center mx-auto mb-4">
-                <span className="font-mono text-sm text-red-600">{num}</span>
+              <div className="w-14 h-14 bg-neutral-950 border border-red-600 flex items-center justify-center mx-auto mb-4">
+                <span className="font-mono text-base text-red-600">{num}</span>
               </div>
               <h4
-                className="text-white mb-1 uppercase"
-                style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em' }}
+                className="text-white mb-2 uppercase"
+                style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', fontWeight: 600, letterSpacing: '0.1em' }}
               >
                 {title}
               </h4>
-              <p className="text-sm text-neutral-500">{desc}</p>
+              <p className="text-base text-neutral-500">{desc}</p>
             </div>
           ))}
         </div>
