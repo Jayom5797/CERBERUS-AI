@@ -1,0 +1,220 @@
+steps:
+  # ── Build all images in parallel ──────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-f'
+      - 'backend/Dockerfile'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-backend:$BUILD_ID'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-backend:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-crawler'
+    args:
+      - 'build'
+      - '-f'
+      - 'crawler/Dockerfile'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-crawler:$BUILD_ID'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-crawler:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-demo'
+    args:
+      - 'build'
+      - '-f'
+      - 'demo-target/Dockerfile'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-demo:$BUILD_ID'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-demo:latest'
+      - '.'
+
+  # ── Push all ──────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend'
+    waitFor: ['build-backend']
+    args: ['push', '--all-tags', 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-backend']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-crawler'
+    waitFor: ['build-crawler']
+    args: ['push', '--all-tags', 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-crawler']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-demo'
+    waitFor: ['build-demo']
+    args: ['push', '--all-tags', 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-demo']
+
+  # ── Deploy backend ────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    waitFor: ['push-backend']
+    entrypoint: bash
+    args:
+      - '-c'
+      - >-
+        gcloud run deploy cerberus-backend
+        --image=us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-backend:$BUILD_ID
+        --platform=managed
+        --region=us-central1
+        --allow-unauthenticated
+        --port=4000
+        --memory=1Gi
+        --cpu=1
+        --min-instances=0
+        --max-instances=5
+        --timeout=300
+        --set-env-vars=NODE_ENV=production,FIREBASE_PROJECT_ID=$PROJECT_ID
+        --quiet
+
+  # ── Deploy crawler ────────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-crawler'
+    waitFor: ['push-crawler']
+    entrypoint: bash
+    args:
+      - '-c'
+      - >-
+        gcloud run deploy cerberus-crawler
+        --image=us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-crawler:$BUILD_ID
+        --platform=managed
+        --region=us-central1
+        --allow-unauthenticated
+        --port=4001
+        --memory=2Gi
+        --cpu=2
+        --min-instances=0
+        --max-instances=3
+        --timeout=300
+        --set-env-vars=NODE_ENV=production
+        --quiet
+
+  # ── Deploy demo target ────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-demo'
+    waitFor: ['push-demo']
+    entrypoint: bash
+    args:
+      - '-c'
+      - >-
+        gcloud run deploy cerberus-demo
+        --image=us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-demo:$BUILD_ID
+        --platform=managed
+        --region=us-central1
+        --allow-unauthenticated
+        --port=3001
+        --memory=256Mi
+        --cpu=1
+        --min-instances=0
+        --max-instances=2
+        --timeout=60
+        --quiet
+
+  # ── Link backend → crawler, save URLs ────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'link-and-save-urls'
+    waitFor: ['deploy-backend', 'deploy-crawler', 'deploy-demo']
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        set -e
+        BURL=$$(gcloud run services describe cerberus-backend --region=us-central1 --format="value(status.url)")
+        CURL=$$(gcloud run services describe cerberus-crawler --region=us-central1 --format="value(status.url)")
+        DURL=$$(gcloud run services describe cerberus-demo --region=us-central1 --format="value(status.url)")
+        echo -n "$$BURL" > /workspace/backend_url.txt
+        echo -n "$$DURL" > /workspace/demo_url.txt
+        echo "Backend:  $$BURL"
+        echo "Crawler:  $$CURL"
+        echo "Demo:     $$DURL"
+        gcloud run services update cerberus-backend \
+          --region=us-central1 \
+          --update-env-vars="CRAWLER_SERVICE_URL=$$CURL" \
+          --quiet
+
+  # ── Build frontend with backend URL baked in ──────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    waitFor: ['link-and-save-urls']
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        set -e
+        BURL=$$(cat /workspace/backend_url.txt)
+        echo "Building frontend with VITE_API_URL=$$BURL"
+        docker build \
+          -f frontend/Dockerfile \
+          --build-arg VITE_API_URL=$$BURL \
+          -t us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-frontend:$BUILD_ID \
+          -t us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-frontend:latest \
+          .
+        docker push --all-tags us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-frontend
+
+  # ── Deploy frontend ───────────────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    waitFor: ['build-frontend']
+    entrypoint: bash
+    args:
+      - '-c'
+      - >-
+        gcloud run deploy cerberus-frontend
+        --image=us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-frontend:$BUILD_ID
+        --platform=managed
+        --region=us-central1
+        --allow-unauthenticated
+        --port=8080
+        --memory=256Mi
+        --cpu=1
+        --min-instances=0
+        --max-instances=5
+        --timeout=60
+        --quiet
+
+  # ── Finalize: update CORS + print URLs ───────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'finalize'
+    waitFor: ['deploy-frontend']
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        set -e
+        FURL=$$(gcloud run services describe cerberus-frontend --region=us-central1 --format="value(status.url)")
+        BURL=$$(cat /workspace/backend_url.txt)
+        DURL=$$(cat /workspace/demo_url.txt)
+        CURL=$$(gcloud run services describe cerberus-crawler --region=us-central1 --format="value(status.url)")
+        gcloud run services update cerberus-backend \
+          --region=us-central1 \
+          --update-env-vars="FRONTEND_URL=$$FURL" \
+          --quiet
+        echo ""
+        echo "========================================================================"
+        echo "  CERBERUS-AI DEPLOYED SUCCESSFULLY"
+        echo ""
+        echo "  App (Frontend):  $$FURL"
+        echo "  Backend API:     $$BURL/api/health"
+        echo "  Crawler:         $$CURL/health"
+        echo "  Demo Target:     $$DURL"
+        echo ""
+        echo "  To demo: scan $$DURL from the app"
+        echo "========================================================================"
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-backend:$BUILD_ID'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-crawler:$BUILD_ID'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-demo:$BUILD_ID'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kayo-deployments/cerberus-frontend:$BUILD_ID'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1800s'

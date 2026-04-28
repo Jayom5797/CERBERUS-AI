@@ -1,0 +1,13 @@
+{
+  "name": "@cerberus/demo-target",
+  "version": "1.0.0",
+  "description": "Intentionally vulnerable demo API for testing CERBERUS-AI",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
