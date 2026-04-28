@@ -85,7 +85,7 @@ export function HomePage() {
         <h1 className="text-5xl md:text-6xl font-bold text-white uppercase tracking-tighter leading-tight">
           Expose What's Hidden
         </h1>
-        <p className="text-base text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg text-neutral-400 max-w-2xl mx-auto leading-relaxed">
           CERBERUS-AI autonomously crawls your application, tests for vulnerabilities, and detects AI bias — powered by Google Gemini.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
@@ -96,8 +96,8 @@ export function HomePage() {
           ].map(({ color, label }) => (
             <span
               key={label}
-              className="px-3 py-1 bg-[#202020] border border-[#5c403c] text-[#e5e2e1] rounded flex items-center gap-2"
-              style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em' }}
+              className="px-4 py-1.5 bg-[#202020] border border-[#5c403c] text-[#e5e2e1] rounded flex items-center gap-2"
+              style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', fontWeight: 600, letterSpacing: '0.08em' }}
             >
               <span className={`w-1.5 h-1.5 ${color} rounded-full`} />
               {label}
@@ -107,26 +107,26 @@ export function HomePage() {
       </section>
 
       {/* ── Scan Form Card ── */}
-      <section className="max-w-[640px] mx-auto mb-16">
-        <div className="bg-[#111111] border-t-2 border-red-600 border-x border-b border-[#5c403c]/30 p-6 relative overflow-hidden">
+      <section className="max-w-[740px] mx-auto mb-16">
+        <div className="bg-[#111111] border-t-2 border-red-600 border-x border-b border-[#5c403c]/30 p-8 relative overflow-hidden">
           {/* scanline overlay */}
           <div className="scanline absolute inset-0 pointer-events-none opacity-20" />
 
           <h2 className="text-2xl font-semibold text-white mb-6 uppercase flex items-center gap-2 tracking-tight">
-            <Terminal className="w-5 h-5 text-red-600" />
+            <Terminal className="w-6 h-6 text-red-600" />
             Start a New Audit
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             {/* Target URL */}
-            <div className="space-y-1">
-              <label className="label-caps">Target URL</label>
+            <div className="space-y-2">
+              <label className="label-caps text-sm">Target URL</label>
               <input
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://api.your-system.io"
-                className="input-field"
+                className="input-field text-base py-4"
                 required
                 disabled={loading}
                 aria-label="Target URL"
@@ -140,22 +140,22 @@ export function HomePage() {
               className="flex items-center gap-2 text-neutral-500 hover:text-neutral-200 transition-colors duration-200 group"
             >
               <Settings className="w-4 h-4 group-hover:text-red-500 transition-colors" />
-              <span className="label-caps text-neutral-500 group-hover:text-neutral-200">
+              <span className="label-caps text-sm text-neutral-500 group-hover:text-neutral-200">
                 Advanced Settings
               </span>
               {showAdvanced
-                ? <ChevronUp className="w-3.5 h-3.5" />
-                : <ChevronDown className="w-3.5 h-3.5" />}
+                ? <ChevronUp className="w-4 h-4" />
+                : <ChevronDown className="w-4 h-4" />}
             </button>
 
             {/* Advanced Panel */}
             {showAdvanced && (
-              <div className="space-y-6 border border-[#5c403c]/40 bg-[#0d0d0d] p-4">
+              <div className="space-y-6 border border-[#5c403c]/40 bg-[#0d0d0d] p-5">
                 {/* Crawl Depth */}
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="label-caps">Max Crawl Depth</label>
-                    <span className="font-mono text-xs text-red-600">Level {maxDepth}</span>
+                    <label className="label-caps text-sm">Max Crawl Depth</label>
+                    <span className="font-mono text-sm text-red-600">Level {maxDepth}</span>
                   </div>
                   <input
                     type="range"
@@ -168,16 +168,16 @@ export function HomePage() {
                 </div>
 
                 {/* Auth Header */}
-                <div className="space-y-1">
-                  <label className="label-caps">Auth Header (Optional)</label>
+                <div className="space-y-2">
+                  <label className="label-caps text-sm">Auth Header (Optional)</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3.5 w-4 h-4 text-neutral-500" />
+                    <Lock className="absolute left-3 top-4 w-4 h-4 text-neutral-500" />
                     <input
                       type="password"
                       value={authHeader}
                       onChange={(e) => setAuthHeader(e.target.value)}
                       placeholder="Bearer *****************"
-                      className="input-field pl-10"
+                      className="input-field pl-10 text-base py-4"
                       aria-label="Auth header"
                     />
                   </div>
@@ -185,8 +185,8 @@ export function HomePage() {
 
                 {/* Toggles */}
                 <div className="grid grid-cols-2 gap-4">
-                  <label className="flex items-center justify-between p-3 bg-[#1b1b1c] border border-[#5c403c] cursor-pointer hover:border-orange-500 transition-colors">
-                    <span className="label-caps text-[#e5e2e1]">Vulnerability Testing</span>
+                  <label className="flex items-center justify-between p-4 bg-[#1b1b1c] border border-[#5c403c] cursor-pointer hover:border-orange-500 transition-colors">
+                    <span className="label-caps text-sm text-[#e5e2e1]">Vulnerability Testing</span>
                     <input
                       type="checkbox"
                       checked={enableVuln}
@@ -194,8 +194,8 @@ export function HomePage() {
                       className="w-4 h-4 bg-neutral-900 border-[#5c403c] rounded focus:ring-0 accent-orange-500"
                     />
                   </label>
-                  <label className="flex items-center justify-between p-3 bg-[#1b1b1c] border border-[#5c403c] cursor-pointer hover:border-purple-500 transition-colors">
-                    <span className="label-caps text-[#e5e2e1]">Bias Detection</span>
+                  <label className="flex items-center justify-between p-4 bg-[#1b1b1c] border border-[#5c403c] cursor-pointer hover:border-purple-500 transition-colors">
+                    <span className="label-caps text-sm text-[#e5e2e1]">Bias Detection</span>
                     <input
                       type="checkbox"
                       checked={enableBias}
@@ -216,7 +216,7 @@ export function HomePage() {
             <button
               type="submit"
               disabled={loading || !url.trim()}
-              className="w-full bg-red-600 hover:bg-red-500 active:scale-95 text-white font-semibold text-lg py-4 uppercase tracking-widest transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed glow-sm"
+              className="w-full bg-red-600 hover:bg-red-500 active:scale-95 text-white font-semibold text-xl py-5 uppercase tracking-widest transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed glow-sm"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
