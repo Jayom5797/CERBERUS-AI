@@ -110,7 +110,7 @@ export function Layout() {
             )}
 
             <a
-              href="https://github.com"
+              href="https://github.com/Jayom5797/CERBERUS-AI"
               target="_blank"
               rel="noopener noreferrer"
               className="font-sans uppercase tracking-widest font-bold text-xs text-neutral-500 hover:text-white transition-all duration-300 hidden md:flex items-center gap-1"
