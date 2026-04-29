@@ -51,7 +51,7 @@ export function HistoryPage() {
         <div className="card p-16 text-center">
           <Shield className="w-12 h-12 text-[#3a3a4a] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">No scans yet</h3>
-          <p className="text-[#8888aa] mb-6">Start your first audit to see results here.</p>
+          <p className="text-[#8888aa] mb-6">Start your first audit to see results here...</p>
           <button onClick={() => navigate('/')} className="btn-primary">Start Audit</button>
         </div>
       ) : (
