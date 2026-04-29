@@ -34,6 +34,37 @@ export class ScanOrchestrator {
         message: `Discovered ${crawlResult.endpoints.length} endpoints`,
         endpoints: crawlResult.endpoints,
       });
+
+      // Early exit — no API endpoints found (likely a static/non-API site)
+      if (crawlResult.endpoints.length === 0) {
+        const report: AuditReport = {
+          scanId: this.scanId,
+          targetUrl: this.targetUrl,
+          generatedAt: new Date().toISOString(),
+          duration: Date.now() - startTime,
+          summary: {
+            totalEndpoints: 0,
+            testedEndpoints: 0,
+            totalVulnerabilities: 0,
+            criticalCount: 0,
+            highCount: 0,
+            mediumCount: 0,
+            lowCount: 0,
+            biasIssues: 0,
+            riskLevel: 'safe',
+          },
+          endpoints: [],
+          vulnerabilities: [],
+          biasFindings: [],
+          riskScore: 0,
+          aiOverview: 'No API endpoints were discovered on this target. The site may be a static website, may block automated crawlers, or may require authentication headers to access its API. Try providing auth headers or scanning a target with accessible REST API endpoints.',
+        };
+        await reportStore.save(report);
+        await this.setStatus('completed', 100);
+        this.emit('scan:completed', { report });
+        return;
+      }
+
       await this.setStatus('analyzing', 25);
 
       // ── Phase 2: AI Classification ──────────────────────────────────────────

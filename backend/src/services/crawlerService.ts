@@ -19,7 +19,7 @@ export class CrawlerService {
       const response = await axios.post<{ data: CrawlResult; success: boolean }>(
         `${this.crawlerUrl}/crawl`,
         { scanId: this.scanId, targetUrl: this.targetUrl, options: this.options },
-        { timeout: 120_000, validateStatus: () => true }
+        { timeout: 60_000, validateStatus: () => true }
       );
 
       // Fall back if: network error, non-200, success=false, or 0 endpoints
