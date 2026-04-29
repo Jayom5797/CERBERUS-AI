@@ -254,22 +254,41 @@ export function HomePage() {
         <h2 className="text-3xl font-semibold text-white mb-16 uppercase text-center tracking-tight">
           Operational Flow
         </h2>
-        <div className="relative flex flex-col md:flex-row justify-between items-start gap-6">
-          {/* dashed line */}
-          <div className="hidden md:block absolute top-6 left-0 w-full h-[1px] border-t border-dashed border-red-600/50 z-0" />
+        <div className="relative flex flex-col md:flex-row justify-between items-start gap-0 md:gap-4">
+          {/* dashed line — desktop only */}
+          <div className="hidden md:block absolute top-7 left-0 w-full h-[1px] border-t border-dashed border-red-600/50 z-0" />
 
-          {steps.map(({ num, title, desc }) => (
-            <div key={num} className="relative z-10 flex-1 text-center px-4">
-              <div className="w-14 h-14 bg-neutral-950 border border-red-600 flex items-center justify-center mx-auto mb-4">
-                <span className="font-mono text-base text-red-600">{num}</span>
+          {steps.map(({ num, title, desc }, i) => (
+            <div key={num} className="relative z-10 flex-1 w-full">
+              {/* Mobile: horizontal row layout */}
+              <div className="flex md:hidden items-start gap-4 px-2 py-5 border-b border-[#5c403c]/20 last:border-b-0">
+                <div className="w-12 h-12 bg-neutral-950 border border-red-600 flex items-center justify-center flex-shrink-0">
+                  <span className="font-mono text-sm text-red-600">{num}</span>
+                </div>
+                <div className="flex-1 pt-1">
+                  <h4
+                    className="text-white mb-1 uppercase"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', fontWeight: 600, letterSpacing: '0.1em' }}
+                  >
+                    {title}
+                  </h4>
+                  <p className="text-base text-neutral-500 leading-snug">{desc}</p>
+                </div>
               </div>
-              <h4
-                className="text-white mb-2 uppercase"
-                style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', fontWeight: 600, letterSpacing: '0.1em' }}
-              >
-                {title}
-              </h4>
-              <p className="text-base text-neutral-500">{desc}</p>
+
+              {/* Desktop: centered column layout */}
+              <div className="hidden md:flex flex-col items-center text-center px-4">
+                <div className="w-14 h-14 bg-neutral-950 border border-red-600 flex items-center justify-center mb-4">
+                  <span className="font-mono text-base text-red-600">{num}</span>
+                </div>
+                <h4
+                  className="text-white mb-2 uppercase"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', fontWeight: 600, letterSpacing: '0.1em' }}
+                >
+                  {title}
+                </h4>
+                <p className="text-base text-neutral-500">{desc}</p>
+              </div>
             </div>
           ))}
         </div>
